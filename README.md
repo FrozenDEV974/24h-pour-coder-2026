@@ -4,7 +4,7 @@ Préparez-vous à plonger dans le monde du développement de jeux vidéo sous co
 
 ## 🎯 Le Défi
 
-Votre objectif est de créer un jeu fonctionnel en utilisant **exclusivement** la fantasy console [TIC-80](https://tic80.com/) et le langage **Fennel** (dialecte Lisp). 
+Votre objectif est de créer un jeu fonctionnel en utilisant **exclusivement** la fantasy console [TIC-80](https://tic80.com/) et le langage **Fennel** (dialecte Lisp).
 
 **Thème de cette édition :** Libre
 
@@ -45,7 +45,7 @@ hackathon-tic80-template/
 │   ├── cheatsheet_fennel.md     # Un résumé de la syntaxe
 │   └── api_tic80.md             # Les fonctions TIC-80 autorisées/utiles
 ├── .gitignore                   # Ignore les fichiers OS et IDE
-└── README.md                    
+└── README.md                  
 ```
 
 ---
@@ -55,13 +55,37 @@ hackathon-tic80-template/
 Pour éviter les conflits Git sur les fichiers binaires, **nous séparons le code (Fennel) des assets (TIC-80)**.
 
 Ouvrez un terminal dans VS Code et lancez cette commande :
+
+```bash
+tic80 --skip --fs . --cmd="load assets/game.tic & import code src/main.fnl"
+```
+
+Cela ouvrira la console de TIC-80. Ensuite, dans cette console, lancez cette commande :
+
+```
+save assets/game.tic
+```
+
+Cela permet de s'assurer que lorsque vous utiliserez les éditeurs de TIC-80 (sprite, map, sfx, music), la sauvegarde se fera dans `assets/game.tic`. Si vous fermez et relancez la console TIC-80, il faut s'assurer que la bonne cartouche (fichier .tic) et le bon code source (main.fnl) soient importés avant de modifier des assets ou lancer le projet. Si cette commande ne fonctionne pas, créer manuellement le dossier `assets` !
+
+Pour lancer votre projet, il vous faut donc importer le code source et les assets. Vous pouvez le faire sur un terminal VS Code avec cette commande :
+
 ```bash
 tic80 --skip --fs . --cmd="load assets/game.tic & import code src/main.fnl & run"
 ```
 
+Ou directement sur la console TIC-80 en écrivant ces trois commandes succintement :
+
+```
+load assets/game.tic
+import code src/main.fnl
+run
+```
+
 **Comment travailler en équipe :**
+
 * 📝 **Le Code :** Modifiez `src/main.fnl` dans VS Code, sauvegardez (`Ctrl+S`), puis basculez sur la fenêtre TIC-80 et appuyez sur **`Ctrl+R`**. Le jeu se met à jour en direct !
-* 🎨 **Les Assets (Sprites, Map, SFX) :** Ouvrez l'éditeur directement dans TIC-80 (touche `Echap`). Modifiez vos dessins, sauvegardez (`Ctrl+S` dans TIC-80). 
+* 🎨 **Les Assets (Sprites, Map, SFX) :** Ouvrez l'éditeur directement dans TIC-80 (touche `Echap`). Modifiez vos dessins, sauvegardez (`Ctrl+S` dans TIC-80).
 * ⚠️ **ATTENTION SUR GIT :** Vous pouvez coder à plusieurs sur `main.fnl` sans souci. Mais **ne soyez jamais deux à modifier les graphismes/sons dans `game.tic` en même temps**, dite bonjour au conflit Git !
 
 ---
@@ -75,10 +99,13 @@ tic80 --skip --fs . --cmd="load assets/game.tic & import code src/main.fnl & run
 ---
 
 ## 🎯 6. Rendu Final :
+
 Vous avez jusqu'au 16 avril 2026 à XXh pour effectuer des commits sur vos repos personnels. Passé ce délai, si vous effectuez un commit, votre équipe peut être disqualifiée.
 
 Votre repo doit contenir :
+
 - Votre code source
+
 * Un fichier README.md présentant votre projet, son principe et des captures d'écran.
 
 Bonne chance à tous, et que le meilleur code l'emporte ! 🚀
