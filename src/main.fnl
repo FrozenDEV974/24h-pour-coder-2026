@@ -39,7 +39,7 @@
 (for [i 1 17]
   (local map-x []) ;; new table each time
   (for [j 1 18]
-    (tset map-x j (+ (math.random 5) 47)))
+    (tset map-x j (math.random 100)))
   (tset map-sol i map-x))
 
 ;; Variable pour l'animation
@@ -140,7 +140,7 @@
       (trace "Generate fly.")
       (local start-x (math.random 240 480))
       (local start-y (math.random 136 272))
-      (new-fly start-x start-y start-x start-y (math.random 240) (math.random 136) (* 120 (- 1 (- chad-mult 1))) (* chad-mult 10))
+      (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* 120 (- 1 (- chad-mult 1))) (* chad-mult 10))
       (trace i)))
   (set is-initializing-game false)
   (trace-flies)
@@ -155,7 +155,17 @@
   (for [i 1 (length map-sol)]
     (local inner (. map-sol i))
     (for [j 1 (length inner)]
-      (spr (. inner j) (* (+ j 5) 8) (* (- i 1) 8) 0)))
+      (if (< (. inner j) 41) ;; Vide : 40 %
+        (spr 48 (* (+ j 5) 8) (* (- i 1) 8) 0)
+        (< (. inner j) 61) ;; Fleurs : 20 %
+        (spr ( + 64 (% t 4)) (* (+ j 5) 8) (* (- i 1) 8) 0)
+        (< (. inner j) 81) ;; Herbe : 20 %
+        (spr ( + 80 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
+        (< (. inner j) 86) ;; Flaque : 5 %
+        (spr ( + 96 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
+        (< (. inner j) 100) ;; Cailloux : 14 %
+        (spr 112 (* (+ j 5) 8) (* (- i 1) 8) 0)
+        (spr 113 (* (+ j 5) 8) (* (- i 1) 8) 0)))) ;; Fenouil : 1% --> A DESSINER !!!
 
   (print (.. "Score: " score) 2 2 couleur-texte true 1 true))
 
@@ -211,6 +221,37 @@
   
   (manage-player-movements))
 
+(fn change-state [sfx-id sfx-note new-state]
+  (sfx sfx-id sfx-note -1)
+  (set state new-state))
+
+(fn render-game-over []
+  (cls background-color-menu)
+
+  (var decalage-y (* (math.sin t) 2))
+  
+  ;; Start menu title and sub.
+  (for [i 0 29]
+    (for [j 0 29]
+      (spr 7 (* i 8) (* j 8) 0)))
+
+  (print (.. "Score: " score) 2 2 couleur-texte true 1 true)
+
+  (print (.. "Best Score: " best-score) 2 22 couleur-texte true 1 true)
+
+  (print "Press space to restart" 80 (+ 80 decalage-y) couleur-texte false 1 true)
+  
+  (spr 4 100 100 0 8))
+
+(fn manage-game-over []
+  (if (> score best-score)
+    (set best-score score))
+  render-game-over)
+
+  (if (= true (key 48))
+    (set state 0)
+  )
+
 ;; Boucle principale exécutée à 60 FPS
 (fn _G.TIC []
   ;;(trace (.. "State " state)) ;; Debug
@@ -221,6 +262,9 @@
   
   (if (= state 1)
     (manage-main-game))
+  
+  (if (= state 2)
+    (manage-game-over))
   
   ;; 4. Fait avancer le temps
   (set t (+ t 0.1)))
