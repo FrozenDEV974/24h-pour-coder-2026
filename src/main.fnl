@@ -39,7 +39,7 @@
 (for [i 1 17]
   (local map-x []) ;; new table each time
   (for [j 1 18]
-    (tset map-x j (math.random 100)))
+    (tset map-x j (+ (math.random 5) 47)))
   (tset map-sol i map-x))
 
 ;; Variable pour l'animation
@@ -155,17 +155,7 @@
   (for [i 1 (length map-sol)]
     (local inner (. map-sol i))
     (for [j 1 (length inner)]
-      (if (< (. inner j) 41) ;; Vide : 40 %
-        (spr 48 (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 61) ;; Fleurs : 20 %
-        (spr ( + 64 (% t 4)) (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 81) ;; Herbe : 20 %
-        (spr ( + 80 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 86) ;; Flaque : 5 %
-        (spr ( + 96 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 100) ;; Cailloux : 14 %
-        (spr 112 (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (spr 113 (* (+ j 5) 8) (* (- i 1) 8) 0)))) ;; Fenouil : 1% --> A DESSINER !!!
+      (spr (. inner j) (* (+ j 5) 8) (* (- i 1) 8) 0)))
 
   (print (.. "Score: " score) 2 2 couleur-texte true 1 true))
 
