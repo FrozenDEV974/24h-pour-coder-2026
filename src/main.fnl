@@ -7,6 +7,9 @@
 (global best-score 0)
 (global player-x 120)
 (global player-y 68)
+(global player-sprite 1)
+(global axis-x 0)
+(global axis-y 0)
 
 (global score 0)
 
@@ -43,7 +46,22 @@
   (cls background-color-game)
   (map)
   (print (.. "Score: " score) 2 2 couleur-texte true 1 true)
-  (spr 1 player-x player-y)
+  (if (= true (btn 0))
+    (set axis-y (- axis-y 1)))
+   (if (= true (btn 1))
+    (set axis-y (+ axis-y 1)))
+    (if (= true (btn 2))
+    (set axis-x (- axis-x 1)))
+    (if (= true (btn 3))
+    (set axis-x (+ axis-x 1)))
+  (set player-y (+ player-y axis-y))
+  (set player-x (+ player-x axis-x))
+  (if (or (not= axis-y 0) (not= axis-x 0))
+    (set player-sprite (+ 2 (% t 2)))
+    (set player-sprite 1))
+  (spr player-sprite player-x player-y)
+  (set axis-x 0)
+  (set axis-y 0)
   )
 
 (fn manage-main-game []
