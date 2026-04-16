@@ -287,7 +287,7 @@
       (set sprite-randomizer 18)
       (set size 1))
 
-    (spr 34 (. value :fly-pos-x) (+ (. value :fly-pos-y) (* 4 size)) 0)
+    (spr 34 (. value :fly-pos-x) (+ (. value :fly-pos-y) 4) 0)
 
     (local sprite (math.random sprite-randomizer (+ 1 sprite-randomizer)))
     (if (= sprite 17)
