@@ -59,6 +59,49 @@
 ;; Variable pour l'animation
 (var t 0)
 
+(fn restart-game []
+  (set best-score 0)
+  (set player-x 120)
+  (set player-y 68)
+  (set player-sprite 1)
+  (set axis-x 0)
+  (set axis-y 0)
+  (set correct false)
+  (set music-state -1)
+  (set music-start-time 0)
+  (set game-start-time 0)
+
+  (set is-initializing-game false)
+
+  (set chad-mult 1)
+
+;; Flies
+  (set flies []) ;; {fly-pos-x, fly-pos-y, fly-vector-x, fly-vector-y, fly-respawn-delay}
+; (global dead-flies-counter []) ;; Counters of dead flies.
+
+  (set must-play-sfx false)
+
+  (set score 0)
+
+  (set nutr-x 6)
+  (set nutr-y 0)
+  (set nutr-index 0)
+  (set nutr-temps 120)
+  (set nutr-delai nutr-temps)
+  (set nutr-affiche 0)
+
+  (set best-score (pmem 0))
+  (set map-sol [])
+  (for [i 1 17]
+    (local map-x []) ;; new table each time
+    (for [j 1 18]
+      (tset map-x j (math.random 100)))
+    (tset map-sol i map-x))
+
+;; Variable pour l'animation
+  (set t 0)
+  (set state 0)) ;; 0: start, 1: playing, 2: game over.
+
 (fn play-music [musi]
   (music musi)
   (set music-start-time t)
@@ -110,7 +153,7 @@
   (render-start-menu)
 
   ;; QUAND bouton flèche haut préssée Jouer un son et passe en mode jeu si on est dans le start menu
-  (if (= true (key 48))
+  (if (= true (keyp 48))
     (change-state 0 c5 1)
   )
 )
@@ -130,7 +173,7 @@
   (and (and (< ax (+ bx bw)) (> (+ ax aw) bx)) (and (< ay (+ by bh)) (> (+ ay ah) by))))
 
 (fn manage-player-movements []
-  (trace correct)
+  ;(trace correct)
   (if (= true (btn 0))
     (set axis-y (- axis-y 1)))
   (if (= true (btn 1))
@@ -185,6 +228,7 @@
   (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* chad-mult 0.002)))
 
 (fn remove-fly [j]
+  (trace "respaw")
   (table.remove flies j)
   (spawn-flies))
 
@@ -194,12 +238,13 @@
     (tset value :fly-pos-x (+ (. value :fly-vector-x) (. value :fly-pos-x)))
     (tset value :fly-pos-y (+ (. value :fly-vector-y) (. value :fly-pos-y)))
     (detecte-oob (. value :fly-pos-x) (. value :fly-pos-y) 0 240 0 136)
-
-    (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
-      (change-state 3 c3 2))))
-    
     (if (= true correct)
       (remove-fly j))
+
+    (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
+      (change-state 3 c3 2)))
+    
+    )
 
 (fn render-ombre-mouche [x y]
   (spr 192 (- x 4) (- y 4) 0)
@@ -219,7 +264,7 @@
     (for [i 0 5 1]
       (spawn-flies)))
   (set is-initializing-game false)
-  ; (trace-flies)
+  ;(trace-flies)
   (move-flies)
   (render-flies))
 
@@ -306,11 +351,11 @@
   
   (for [i 0 5]
     (for [j 0 16]
-      (spr 0 (* i 8) (* j 8))))
+      (spr 7 (* i 8) (* j 8))))
   
   (for [i 24 29]
     (for [j 0 16]
-      (spr 0 (* i 8) (* j 8))))
+      (spr 7 (* i 8) (* j 8))))
       
   (print (.. "Score: " score) 2 2 couleur-texte true 1 true))
 
@@ -320,7 +365,10 @@
 
 (fn render-game-over []
   (cls background-color-menu)
-  (reset-music-game)
+  (if (or (= music-state 2) (= music-state 0))
+    (reset-music-game))
+  (if (not= 3 music-state)
+    (play-music 3))
 
   (var decalage-y (* (math.sin t) 2))
   
@@ -342,8 +390,8 @@
     (set best-score score))
   (render-game-over)
   (pmem 0 best-score)
-  (if (= true (key 48))
-    (set state 0)
+  (if (= true (keyp 48))
+    (restart-game)
   ))
 
 ;; Boucle principale exécutée à 60 FPS
