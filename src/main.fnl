@@ -7,8 +7,8 @@
 
 (global state 0) ;; 0: start, 1: playing, 2: game over.
 (global best-score 0)
-(global player-x 120)
-(global player-y 68)
+(global player-x (- 120 4))
+(global player-y (- 68 4))
 (global player-sprite 1)
 (global axis-x 0)
 (global axis-y 0)
@@ -143,31 +143,30 @@
 
   (print "By QbitSoft" 197 128 couleur-texte true 1 true)
 
+  
+  (spr 5 (- 7 32) (- 35 32) 0 8)
+  (spr 6 (+ 7 32) (- 35 32) 0 8)
+  (spr 21 (- 7 32) (+ 35 32) 0 8)
+  (spr 22 (+ 7 32) (+ 35 32) 0 8)
   (spr 1 7 35 0 8)
   (spr 33 165 35 0 8))
 
 (fn change-state [sfx-id sfx-note new-state]
   (sfx sfx-id sfx-note (* 60 3))
-  (set state new-state))
-
-
-
-(fn actions-starting-game []
-(set is-initializing-game true)
-(change-state 0 c5 1)
-)
+  (set state new-state)
+  (set is-initializing-game true))
 
 (fn manage-start-menu [] ;; State 0. Start menu.
   (render-start-menu)
 
   ;; QUAND bouton flèche haut préssée Jouer un son et passe en mode jeu si on est dans le start menu
   (if (= true (keyp 48))
-    (actions-starting-game)
+    (change-state 0 c5 1)
   )
 )
 
 (fn detecte-oob [x y min-x max-x min-y max-y]
-  (set correct false)ss
+  (set correct false)
   (if (< x min-x)
     (set correct true))
   (if (> (+ x 8) max-x)
@@ -248,12 +247,13 @@
     (tset value :fly-pos-x (+ (. value :fly-vector-x) (. value :fly-pos-x)))
     (tset value :fly-pos-y (+ (. value :fly-vector-y) (. value :fly-pos-y)))
     (detecte-oob (. value :fly-pos-x) (. value :fly-pos-y) 0 240 0 136)
-
-    (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
-      (change-state 3 c3 2))))
-    
     (if (= true correct)
       (remove-fly j))
+
+    (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
+      (change-state 3 c3 2)))
+    
+    )
 
 (fn render-ombre-mouche [x y]
   (spr 192 (- x 4) (- y 4) 0)
@@ -273,7 +273,7 @@
     (for [i 0 5 1]
       (spawn-flies)))
   (set is-initializing-game false)
-  ; (trace-flies)
+  ;(trace-flies)
   (move-flies)
   (render-flies))
 
@@ -344,9 +344,6 @@
     (set chad-mult (* 1.01 chad-mult))
     (set chad-mult (* 1.05 chad-mult))))
 
-(fn detect-collision [ax ay aw ah bx by bw bh]
-  (and (and (< ax (+ bx bw)) (> (+ ax aw) bx)) (and (< ay (+ by bh)) (> (+ ay ah) by))))
-
 (fn manage-main-game []
   (render-game)
 
@@ -364,13 +361,14 @@
   
   (for [i 0 5]
     (for [j 0 16]
-      (spr 0 (* i 8) (* j 8))))
+      (spr 7 (* i 8) (* j 8))))
   
   (for [i 24 29]
     (for [j 0 16]
-      (spr 0 (* i 8) (* j 8))))
+      (spr 7 (* i 8) (* j 8))))
       
-  (print (.. "Score: " score) 2 2 couleur-texte true 1 true))
+  (print (.. "Score:\n" score) 2 2 couleur-texte true 1 true)
+  (print (.. "Best Score:\n" best-score) 2 22 couleur-texte true 1 true))
 
 (fn change-state [sfx-id sfx-note new-state]
   (sfx sfx-id sfx-note -1)
@@ -378,7 +376,10 @@
 
 (fn render-game-over []
   (cls background-color-menu)
-  (reset-music-game)
+  (if (or (= music-state 2) (= music-state 0))
+    (reset-music-game))
+  (if (not= 3 music-state)
+    (play-music 3))
 
   (var decalage-y (* (math.sin t) 2))
   
@@ -387,7 +388,7 @@
     (for [j 0 29]
       (spr 7 (* i 8) (* j 8) 0)))
 
-  (print (.. "Score: " score) 2 2 couleur-texte true 1 true)
+  (print (.. "Score: \n" score) 2 2 couleur-texte true 1 true)
 
   (print (.. "Best Score: " best-score) 2 22 couleur-texte true 1 true)
 
