@@ -19,7 +19,7 @@
 (global is-initializing-game false)
 
 (global chad-mult 1)
-(global chad-mod-lvl 1.1)
+(global chad-mod-lvl 1.3)
 (global chad-fly-spawned false)
 
 ; Flies
@@ -57,7 +57,7 @@
     (tset map-x j (math.random 100)))
   (tset map-sol i map-x))
 
- ; Variable pour l'animation
+; Variable pour l'animation
 (var t 0)
 
 (fn restart-game []
@@ -75,6 +75,7 @@
   (set is-initializing-game false)
 
   (set chad-mult 1)
+  (set chad-fly-spawned false)
 
 ; Flies
   (set flies []) ; {fly-pos-x, fly-pos-y, fly-vector-x, fly-vector-y, fly-respawn-delay}
@@ -238,8 +239,7 @@
   (local start-y (math.random 0 136))
   (var must-chad (and (< chad-mod-lvl chad-mult) (not chad-fly-spawned)))
   (if (= true must-chad)
-    (spaw-chad)
-    (set must-chad false))
+    (spaw-chad))
 
   (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* chad-mult 0.002) must-chad))
 
@@ -260,11 +260,23 @@
     (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
       (change-state 3 c3 2))))
 
-(fn render-ombre-mouche [x y]
+(fn render-ombre-mouche1 [x y]
   (spr 192 (- x 4) (- y 4) 0)
   (spr 193 (+ x 4) (- y 4) 0)
   (spr 208 (- x 4) (+ y 4) 0)
   (spr 209 (+ x 4) (+ y 4) 0))
+
+(fn render-ombre-mouche2 [x y]
+  (spr 194 (- x 12) (- y 12) 0 3)
+  (spr 195 (+ x 12) (- y 12) 0 3)
+  (spr 210 (- x 12) (+ y 12) 0 3)
+  (spr 211 (+ x 12) (+ y 12) 0 3))
+
+(fn render-ombre-mouche3 [x y]
+  (spr 196 (- x 12) (- y 12) 0 3)
+  (spr 197 (+ x 12) (- y 12) 0 3)
+  (spr 212 (- x 12) (+ y 12) 0 3)
+  (spr 213 (+ x 12) (+ y 12) 0 3))
 
 (fn render-flies []
   (each [key value (pairs flies)]
@@ -279,7 +291,11 @@
 
     (local sprite (math.random sprite-randomizer (+ 1 sprite-randomizer)))
     (if (= sprite 17)
-      (render-ombre-mouche (. value :fly-pos-x) (. value :fly-pos-y)))
+      (render-ombre-mouche1 (. value :fly-pos-x) (. value :fly-pos-y))
+      (= sprite 18)
+      (render-ombre-mouche2 (. value :fly-pos-x) (. value :fly-pos-y))
+      (= sprite 19)
+      (render-ombre-mouche3 (. value :fly-pos-x) (. value :fly-pos-y)))
     (spr sprite (. value :fly-pos-x) (. value :fly-pos-y) 0 size)))
 
 (fn manage-flies []
@@ -389,6 +405,7 @@
 
 (fn render-game-over []
   (cls background-color-menu)
+  (set music-main 2)
   (if (or (= music-state 2) (= music-state 0))
     (reset-music-game))
   (if (not= 3 music-state)
