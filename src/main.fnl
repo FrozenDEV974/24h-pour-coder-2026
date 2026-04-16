@@ -12,6 +12,7 @@
 (global player-sprite 1)
 (global axis-x 0)
 (global axis-y 0)
+(global correct false)
 
 (global is-initializing-game false)
 
@@ -30,6 +31,11 @@
 (global nutr-temps 120)
 (global nutr-delai nutr-temps)
 (global nutr-affiche 0)
+
+(global GAME_MAX_X 192)
+(global GAME_MIN_X 48)
+(global GAME_MAX_Y 136)
+(global GAME_MIN_Y 0)
 
 (var couleur-texte 12)  ; 6 = vert. Essaie 11 (bleu clair)
 (var background-color-menu 0)  ; 12 = Blanc. Essaie 0 (Noir)
@@ -83,7 +89,19 @@
   )
 )
 
+(fn detecte-oob [x y min-x max-x min-y max-y]
+  (set correct false)
+  (if (< x min-x)
+    (set correct true))
+  (if (> (+ x 8) max-x)
+    (set correct true))
+  (if (< y min-y)
+    (set correct true))
+  (if (> (+ y 8) max-y)
+    (set correct true)))
+
 (fn manage-player-movements []
+  (trace correct)
   (if (= true (btn 0))
     (set axis-y (- axis-y 1)))
   (if (= true (btn 1))
@@ -92,6 +110,13 @@
     (set axis-x (- axis-x 1)))
   (if (= true (btn 3))
     (set axis-x (+ axis-x 1)))
+  (detecte-oob (+ player-x axis-x) player-y GAME_MIN_X GAME_MAX_X GAME_MIN_Y GAME_MAX_Y)
+  (if (= true correct)
+    (set axis-x 0))
+  (detecte-oob player-x (+ player-y axis-y) GAME_MIN_X GAME_MAX_X GAME_MIN_Y GAME_MAX_Y)
+  (if (= true correct)
+    (set axis-y 0))
+
   (set player-y (+ player-y axis-y))
   (set player-x (+ player-x axis-x))
   (if (or (not= axis-y 0) (not= axis-x 0))
@@ -125,10 +150,8 @@
 (fn move-flies []
   ; (trace "Tdmsldvs")
   (each [key value (pairs flies)]
-    (trace "Test")
     (tset value :fly-pos-x (+ (. value :fly-vector-x) (. value :fly-pos-x)))
-    (tset value :fly-pos-y (+ (. value :fly-vector-y) (. value :fly-pos-y)))
-    (trace (.. "Fly moved: {" (. value :fly-pos-x)))))
+    (tset value :fly-pos-y (+ (. value :fly-vector-y) (. value :fly-pos-y)))))
 
 (fn render-flies []
   (each [key value (pairs flies)]
@@ -137,7 +160,6 @@
 (fn manage-flies []
   (if (= true is-initializing-game)
     (for [i 0 5 1]
-      (trace "Generate fly.")
 
       (var mult-x -1)
       (if (= (math.random 1 2) 1)
@@ -145,10 +167,9 @@
       (local start-x (* (math.random 240 480) mult-x))
 
       (local start-y (math.random 0 136))
-      (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* 120 (- 1 (- chad-mult 1))) (* chad-mult 0.002))
-      (trace i)))
+      (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* 120 (- 1 (- chad-mult 1))) (* chad-mult 0.002))))
   (set is-initializing-game false)
-  (trace-flies)
+  ; (trace-flies)
   (move-flies)
   (render-flies))
 
