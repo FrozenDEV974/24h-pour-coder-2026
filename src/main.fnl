@@ -98,7 +98,7 @@
   (spr 33 165 35 0 8))
 
 (fn change-state [sfx-id sfx-note new-state]
-  (sfx sfx-id sfx-note -1)
+  (sfx sfx-id sfx-note (* 60 3))
   (set state new-state)
   (set is-initializing-game true))
 
@@ -121,6 +121,9 @@
     (set correct true))
   (if (> (+ y 8) max-y)
     (set correct true)))
+
+(fn detect-collision [ax ay aw ah bx by bw bh]
+  (and (and (< ax (+ bx bw)) (> (+ ax aw) bx)) (and (< ay (+ by bh)) (> (+ ay ah) by))))
 
 (fn manage-player-movements []
   (trace correct)
@@ -187,12 +190,25 @@
     (tset value :fly-pos-x (+ (. value :fly-vector-x) (. value :fly-pos-x)))
     (tset value :fly-pos-y (+ (. value :fly-vector-y) (. value :fly-pos-y)))
     (detecte-oob (. value :fly-pos-x) (. value :fly-pos-y) 0 240 0 136)
+
+    (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
+      (change-state 3 c3 2))))
+    
     (if (= true correct)
-      (remove-fly j))))
+      (remove-fly j))
+
+(fn render-ombre-mouche [x y]
+  (spr 192 (- x 4) (- y 4) 0)
+  (spr 193 (+ x 4) (- y 4) 0)
+  (spr 208 (- x 4) (+ y 4) 0)
+  (spr 209 (+ x 4) (+ y 4) 0))
 
 (fn render-flies []
   (each [key value (pairs flies)]
-    (spr 16 (. value :fly-pos-x) (. value :fly-pos-y) 0)))
+    (local sprite (math.random 16 17))
+    (if (= sprite 17)
+      (render-ombre-mouche (. value :fly-pos-x) (. value :fly-pos-y)))
+    (spr sprite (. value :fly-pos-x) (. value :fly-pos-y) 0)))
 
 (fn manage-flies []
   (if (= true is-initializing-game)
@@ -228,9 +244,7 @@
         (spr ( + 96 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
         (< (. inner j) 100) ;; Cailloux : 14 %
         (spr 112 (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (spr 113 (* (+ j 5) 8) (* (- i 1) 8) 0)))) ;; Fenouil : 1% --> A DESSINER !!!
-
-  (print (.. "Score: " score) 2 2 couleur-texte true 1 true))
+        (spr 113 (* (+ j 5) 8) (* (- i 1) 8) 0))))) ;; Fenouil : 1%
 
 (fn generate-nutriment []
   (if (> nutr-temps 30)
@@ -271,9 +285,6 @@
     (set chad-mult (* 1.01 chad-mult))
     (set chad-mult (* 1.05 chad-mult))))
 
-(fn detect-collision [ax ay aw ah bx by bw bh]
-  (and (and (< ax (+ bx bw)) (> (+ ax aw) bx)) (and (< ay (+ by bh)) (> (+ ay ah) by))))
-
 (fn manage-main-game []
   (render-game)
 
@@ -287,7 +298,17 @@
     (manage-ingere-nutriment))
   
   (manage-player-movements)
-  (manage-flies))
+  (manage-flies)
+  
+  (for [i 0 5]
+    (for [j 0 16]
+      (spr 0 (* i 8) (* j 8))))
+  
+  (for [i 24 29]
+    (for [j 0 16]
+      (spr 0 (* i 8) (* j 8))))
+      
+  (print (.. "Score: " score) 2 2 couleur-texte true 1 true))
 
 (fn change-state [sfx-id sfx-note new-state]
   (sfx sfx-id sfx-note -1)
@@ -295,6 +316,7 @@
 
 (fn render-game-over []
   (cls background-color-menu)
+  (reset-music-game)
 
   (var decalage-y (* (math.sin t) 2))
   
@@ -309,16 +331,16 @@
 
   (print "Press space to restart" 80 (+ 80 decalage-y) couleur-texte false 1 true)
   
-  (spr 4 100 100 0 8))
+  (spr 4 85 10 0 8))
 
 (fn manage-game-over []
   (if (> score best-score)
     (set best-score score))
-  render-game-over)
+  (render-game-over)
 
   (if (= true (key 48))
     (set state 0)
-  )
+  ))
 
 ;; Boucle principale exécutée à 60 FPS
 (fn _G.TIC []
