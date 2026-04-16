@@ -1,11 +1,9 @@
-;; title:  Dodge
-;; author: QBitStudio
-;; desc:   A dodge game designed by QBitSoft.
+;; title: Dodge!
+;; author: QbitStudio
+;; desc: A video game designed by QbitSoft
 ;; script: fennel
-;; Acun code ici présent n'a été généré par un LLM.
-;; #NoAi
 
-(global state 0) ;; 0: start, 1: playing, 2: game over.
+(global state 0) ; 0: start, 1: playing, 2: game over.
 (global best-score 0)
 (global player-x (- 120 4))
 (global player-y (- 68 4))
@@ -21,11 +19,12 @@
 (global is-initializing-game false)
 
 (global chad-mult 1)
-(global chad-mod-lvl 1.4)
+(global chad-mod-lvl 1.1)
+(global chad-fly-spawned false)
 
-;; Flies
-(global flies []) ;; {fly-pos-x, fly-pos-y, fly-vector-x, fly-vector-y, fly-respawn-delay}
-; (global dead-flies-counter []) ;; Counters of dead flies.
+; Flies
+(global flies []) ; {fly-pos-x, fly-pos-y, fly-vector-x, fly-vector-y, fly-respawn-delay, is-chad}
+; (global dead-flies-counter []) ; Counters of dead flies.
 
 (global must-play-sfx false)
 
@@ -53,12 +52,12 @@
 (set best-score (pmem 0))
 (global map-sol [])
 (for [i 1 17]
-  (local map-x []) ;; new table each time
+  (local map-x []) ; new table each time
   (for [j 1 18]
     (tset map-x j (math.random 100)))
   (tset map-sol i map-x))
 
-;; Variable pour l'animation
+ ; Variable pour l'animation
 (var t 0)
 
 (fn restart-game []
@@ -77,9 +76,9 @@
 
   (set chad-mult 1)
 
-;; Flies
-  (set flies []) ;; {fly-pos-x, fly-pos-y, fly-vector-x, fly-vector-y, fly-respawn-delay}
-; (global dead-flies-counter []) ;; Counters of dead flies.
+; Flies
+  (set flies []) ; {fly-pos-x, fly-pos-y, fly-vector-x, fly-vector-y, fly-respawn-delay}
+; (global dead-flies-counter []) ; Counters of dead flies.
 
   (set must-play-sfx false)
 
@@ -95,14 +94,14 @@
   (set best-score (pmem 0))
   (set map-sol [])
   (for [i 1 17]
-    (local map-x []) ;; new table each time
+    (local map-x []) ; new table each time
     (for [j 1 18]
       (tset map-x j (math.random 100)))
     (tset map-sol i map-x))
 
-;; Variable pour l'animation
+; Variable pour l'animation
   (set t 0)
-  (set state 0)) ;; 0: start, 1: playing, 2: game over.
+  (set state 0)) ; 0: start, 1: playing, 2: game over.
 
 (fn play-music [musi]
   (music musi)
@@ -131,24 +130,23 @@
 
   (var decalage-y (* (math.sin t) 2))
   
-  ;; Start menu title and sub.
+  ; Start menu title and sub.
   (for [i 0 29]
     (for [j 0 29]
       (spr 7 (* i 8) (* j 8) 0)))
 
-  (print (.. "Best Score: " best-score) 2 2 couleur-texte true 1 true)
+  (print (.. "Best Score:\n" best-score) 4 4 couleur-texte true 1 true)
 
-  (print "Dodge!" 100 (+ 50 decalage-y) couleur-texte)
-  (print "Press space to start" 80 (+ 80 decalage-y) couleur-texte false 1 true)
+  (print "Dodge!" 105 (+ 50 decalage-y) couleur-texte)
+  (print "Press space to start" 85 (+ 80 decalage-y) couleur-texte false 1 true)
 
-  (print "By QbitSoft" 197 128 couleur-texte true 1 true)
+  (print "By QbitSoft" 190 125 couleur-texte true 1 true)
 
-  
-  (spr 5 (- 7 32) (- 35 32) 0 8)
-  (spr 6 (+ 7 32) (- 35 32) 0 8)
-  (spr 21 (- 7 32) (+ 35 32) 0 8)
-  (spr 22 (+ 7 32) (+ 35 32) 0 8)
-  (spr 1 7 35 0 8)
+  (spr 5 (- 15 32) (- 35 32) 0 8)
+  (spr 6 (+ 15 32) (- 35 32) 0 8)
+  (spr 21 (- 15 32) (+ 35 32) 0 8)
+  (spr 22 (+ 15 32) (+ 35 32) 0 8)
+  (spr 1 15 35 0 8)
   (spr 33 165 35 0 8))
 
 (fn change-state [sfx-id sfx-note new-state]
@@ -156,14 +154,12 @@
   (set state new-state)
   (set is-initializing-game true))
 
-(fn manage-start-menu [] ;; State 0. Start menu.
+(fn manage-start-menu [] ; State 0. Start menu.
   (render-start-menu)
 
-  ;; QUAND bouton flèche haut préssée Jouer un son et passe en mode jeu si on est dans le start menu
+  ; QUAND bouton flèche haut préssée Jouer un son et passe en mode jeu si on est dans le start menu
   (if (= true (keyp 48))
-    (change-state 0 c5 1)
-  )
-)
+    (change-state 0 c5 1)))
 
 (fn detecte-oob [x y min-x max-x min-y max-y]
   (set correct false)
@@ -180,7 +176,6 @@
   (and (and (< ax (+ bx bw)) (> (+ ax aw) bx)) (and (< ay (+ by bh)) (> (+ ay ah) by))))
 
 (fn manage-player-movements []
-  ;(trace correct)
   (if (= true (btn 0))
     (set axis-y (- axis-y 1)))
   (if (= true (btn 1))
@@ -189,6 +184,7 @@
     (set axis-x (- axis-x 1)))
   (if (= true (btn 3))
     (set axis-x (+ axis-x 1)))
+  
   (detecte-oob (+ player-x axis-x) player-y GAME_MIN_X GAME_MAX_X GAME_MIN_Y GAME_MAX_Y)
   (if (= true correct)
     (set axis-x 0))
@@ -201,11 +197,13 @@
   (if (or (not= axis-y 0) (not= axis-x 0))
     (set player-sprite (+ 2 (% t 2)))
     (set player-sprite 1))
+
   (spr 5 (- player-x 4) (- player-y 4) 0)
   (spr 6 (+ player-x 4) (- player-y 4) 0)
   (spr 21 (- player-x 4) (+ player-y 4) 0)
   (spr 22 (+ player-x 4) (+ player-y 4) 0)
   (spr player-sprite player-x player-y 0)
+
   (set axis-x 0)
   (set axis-y 0))
 
@@ -218,15 +216,19 @@
     (trace (.. "vector-y: " (. value :fly-vector-y)))
     (trace (.. "respawn-delay: " (. value :fly-respawn-delay)))
     (trace "}")))
+  
+(fn spaw-chad []
+  (set music-main 0)
+  (set chad-fly-spawned true))
 
-(fn new-fly [pos-x pos-y dir-start-x dir-start-y dir-end-x dir-end-y velocity]
-  ;; ->AB=((xb-xa)*->i)+((yb-ya)*->i)
+(fn new-fly [pos-x pos-y dir-start-x dir-start-y dir-end-x dir-end-y velocity is-chad]
+  ; ->AB=((xb-xa)*->i)+((yb-ya)*->i)
   (local vector-x (- dir-end-x dir-start-x))
   (local vector-y (- dir-end-y dir-start-y))
   (set velo (* velocity chad-mult))
-  (if (> chad-mult chad-mod-lvl)
-    (set music-main 0))
-  (table.insert flies {:fly-pos-x pos-x :fly-pos-y pos-y :fly-vector-x (* velo vector-x) :fly-vector-y (* velo vector-y)}))
+  ;(if (> chad-mult chad-mod-lvl)
+  ;  (set music-main 0))
+  (table.insert flies {:fly-pos-x pos-x :fly-pos-y pos-y :fly-vector-x (* velo vector-x) :fly-vector-y (* velo vector-y) :is-chad is-chad}))
 
 (fn spawn-flies []
   (local spawn-zone (math.random 0 1))
@@ -234,7 +236,12 @@
   (if (= 1 spawn-zone)
     (set start-x (math.random 200 240)))
   (local start-y (math.random 0 136))
-  (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* chad-mult 0.002)))
+  (var must-chad (and (< chad-mod-lvl chad-mult) (not chad-fly-spawned)))
+  (if (= true must-chad)
+    (spaw-chad)
+    (set must-chad false))
+
+  (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* chad-mult 0.002) must-chad))
 
 (fn remove-fly [j]
   (trace "respaw")
@@ -246,14 +253,12 @@
   (each [j value (pairs flies)]
     (tset value :fly-pos-x (+ (. value :fly-vector-x) (. value :fly-pos-x)))
     (tset value :fly-pos-y (+ (. value :fly-vector-y) (. value :fly-pos-y)))
-    (detecte-oob (. value :fly-pos-x) (. value :fly-pos-y) 0 240 0 136)
+    (detecte-oob (. value :fly-pos-x) (. value :fly-pos-y) 0 240 -16 152)
     (if (= true correct)
       (remove-fly j))
 
     (if (detect-collision player-x player-y 8 8 (. value :fly-pos-x) (. value :fly-pos-y) 8 8)
-      (change-state 3 c3 2)))
-    
-    )
+      (change-state 3 c3 2))))
 
 (fn render-ombre-mouche [x y]
   (spr 192 (- x 4) (- y 4) 0)
@@ -263,10 +268,19 @@
 
 (fn render-flies []
   (each [key value (pairs flies)]
-    (local sprite (math.random 16 17))
+    (var sprite-randomizer 16)
+    (var size 3)
+
+    (if (= true (. value :is-chad))
+      (set sprite-randomizer 18)
+      (set size 1))
+
+    (spr 34 (. value :fly-pos-x) (+ (. value :fly-pos-y) 4) 0)
+
+    (local sprite (math.random sprite-randomizer (+ 1 sprite-randomizer)))
     (if (= sprite 17)
       (render-ombre-mouche (. value :fly-pos-x) (. value :fly-pos-y)))
-    (spr sprite (. value :fly-pos-x) (. value :fly-pos-y) 0)))
+    (spr sprite (. value :fly-pos-x) (. value :fly-pos-y) 0 size)))
 
 (fn manage-flies []
   (if (= true is-initializing-game)
@@ -278,7 +292,6 @@
   (render-flies))
 
 (fn render-game []
-  ;;(trace (- t game-start-time))
   
   (if (= game-start-time 0)
     (start-game-music-logic))
@@ -293,17 +306,17 @@
   (for [i 1 (length map-sol)]
     (local inner (. map-sol i))
     (for [j 1 (length inner)]
-      (if (< (. inner j) 41) ;; Vide : 40 %
+      (if (< (. inner j) 41) ; Vide : 40 %
         (spr 48 (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 61) ;; Fleurs : 20 %
+        (< (. inner j) 61) ; Fleurs : 20 %
         (spr ( + 64 (% t 4)) (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 81) ;; Herbe : 20 %
+        (< (. inner j) 81) ; Herbe : 20 %
         (spr ( + 80 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 86) ;; Flaque : 5 %
+        (< (. inner j) 86) ; Flaque : 5 %
         (spr ( + 96 (% t 6)) (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (< (. inner j) 100) ;; Cailloux : 14 %
+        (< (. inner j) 100) ; Cailloux : 14 %
         (spr 112 (* (+ j 5) 8) (* (- i 1) 8) 0)
-        (spr 113 (* (+ j 5) 8) (* (- i 1) 8) 0))))) ;; Fenouil : 1%
+        (spr 113 (* (+ j 5) 8) (* (- i 1) 8) 0))))) ; Fenouil : 1%
 
 (fn generate-nutriment []
   (if (> nutr-temps 30)
@@ -367,8 +380,8 @@
     (for [j 0 16]
       (spr 7 (* i 8) (* j 8))))
       
-  (print (.. "Score:\n" score) 2 2 couleur-texte true 1 true)
-  (print (.. "Best Score:\n" best-score) 2 22 couleur-texte true 1 true))
+  (print (.. "Score:\n" score) 4 4 couleur-texte true 1 true)
+  (print (.. "Best Score:\n" best-score) 4 20 couleur-texte true 1 true))
 
 (fn change-state [sfx-id sfx-note new-state]
   (sfx sfx-id sfx-note -1)
@@ -383,16 +396,15 @@
 
   (var decalage-y (* (math.sin t) 2))
   
-  ;; Start menu title and sub.
   (for [i 0 29]
     (for [j 0 29]
       (spr 7 (* i 8) (* j 8) 0)))
 
-  (print (.. "Score: \n" score) 2 2 couleur-texte true 1 true)
+  (print (.. "Score:\n" score) 4 4 couleur-texte true 1 true)
 
-  (print (.. "Best Score: " best-score) 2 22 couleur-texte true 1 true)
+  (print (.. "Best Score:\n" best-score) 4 20 couleur-texte true 1 true)
 
-  (print "Press space to restart" 80 (+ 80 decalage-y) couleur-texte false 1 true)
+  (print "Press space to restart" 80 (+ 100 decalage-y) couleur-texte false 1 true)
   
   (spr 4 85 10 0 8))
 
@@ -405,9 +417,8 @@
     (restart-game)
   ))
 
-;; Boucle principale exécutée à 60 FPS
+; Boucle principale exécutée à 60 FPS
 (fn _G.TIC []
-  ;;(trace (.. "State " state)) ;; Debug
   
   (if (= state 0)
     (manage-start-menu)
@@ -419,5 +430,5 @@
   (if (= state 2)
     (manage-game-over))
   
-  ;; 4. Fait avancer le temps
+  ; 4. Fait avancer le temps
   (set t (+ t 0.1)))
