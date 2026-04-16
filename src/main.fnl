@@ -244,6 +244,7 @@
   (new-fly start-x start-y start-x start-y (math.random 0 240) (math.random 0 136) (* chad-mult 0.002) must-chad))
 
 (fn remove-fly [j]
+  (trace "respaw")
   (table.remove flies j)
   (spawn-flies))
 
